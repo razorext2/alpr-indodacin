@@ -21,14 +21,14 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # Initialize the parameters
-confThreshold = 0.5  #Confidence threshold
+confThreshold = 0.7   #Confidence threshold
 nmsThreshold = 0.4  #Non-maximum suppression threshold
 
 # Initialize the pyetesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 inpWidth = 512 #128 #224 #320 #416 #512 #608 #704 #Width of network's input image
-inpHeight = 800 #128 #224 #320 #416 #512 #608 #704 #Height of network's input image
+inpHeight = 512 #128 #224 #320 #416 #512 #608 #704 #Height of network's input image
 
 # Load names of classes
 classesFile = "alpr/classes.names"

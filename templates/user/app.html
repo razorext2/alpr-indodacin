@@ -33,13 +33,13 @@ endblock %} {% block content %}
                 </li>
                 <!--end::Nav item-->
                 <!--begin::Nav item-->
-                <li class="nav-item mt-2">
+                <!-- <li class="nav-item mt-2">
                   <a
                     class="nav-link text-active-primary ms-0 me-10 py-5"
                     href="{{url_for('user.detail_api', id = data.app_id)}}"
                     >API</a
                   >
-                </li>
+                </li> -->
                 <!--end::Nav item-->
                 <!--begin::Nav item-->
                 <li class="nav-item mt-2">
@@ -391,11 +391,48 @@ endblock %} {% block content %}
   <div id="imagemodal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">
-            <span aria-hidden="true">&times;</span>
-            <span class="sr-only">Close</span>
-          </button>
+        <div class="modal-header" id="kt_modal_edit_plate">
+          <!--begin::Modal title-->
+          <h4 class="fw-bolder">Preview Image</h4>
+          <!--end::Modal title-->
+          <!--begin::Close-->
+          <div
+            class="btn btn-icon btn-sm btn-active-icon-primary"
+            data-bs-dismiss="modal"
+          >
+            <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
+            <span class="svg-icon svg-icon-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <rect
+                  opacity="0.5"
+                  x="6"
+                  y="17.3137"
+                  width="16"
+                  height="2"
+                  rx="1"
+                  transform="rotate(-45 6 17.3137)"
+                  fill="black"
+                ></rect>
+                <rect
+                  x="7.41422"
+                  y="6"
+                  width="16"
+                  height="2"
+                  rx="1"
+                  transform="rotate(45 7.41422 6)"
+                  fill="black"
+                ></rect>
+              </svg>
+            </span>
+            <!--end::Svg Icon-->
+          </div>
+          <!--end::Close-->
         </div>
         <div class="modal-body">
           <img
@@ -423,7 +460,7 @@ endblock %} {% block content %}
         <!--begin::Modal header-->
         <div class="modal-header" id="kt_modal_edit_plate">
           <!--begin::Modal title-->
-          <h2 class="fw-bolder">Detect Plate Number</h2>
+          <h4 class="fw-bolder">Detect Plate Number</h4>
           <!--end::Modal title-->
           <!--begin::Close-->
           <div
@@ -466,7 +503,7 @@ endblock %} {% block content %}
         </div>
         <!--end::Modal header-->
         <!--begin::Modal body-->
-        <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+        <div class="modal-body scroll-y">
           <!--begin::Scroll-->
           <div
             class="d-flex flex-column scroll-y me-n7 pe-7"
@@ -479,10 +516,28 @@ endblock %} {% block content %}
             data-kt-scroll-offset="300px"
           >
             <!--begin::Input group-->
-            <div class="form-group">
-              <label>Upload Image</label>
-              <div class="custom-file">
-                <input type="file" class="file-input" id="file" />
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-6">
+                  <h4>Upload Image</h4>
+                  <form>
+                    <div class="form-group">
+                      <label for="file">Select an image:</label>
+                      <input
+                        type="file"
+                        class="form-control"
+                        id="file"
+                        name="imageFile"
+                        accept="image/*"
+                      />
+                    </div>
+                  </form>
+                </div>
+                <div class="col-6">
+                  <div class="preview-container">
+                    <div id="preview" class="no-preview">No preview</div>
+                  </div>
+                </div>
               </div>
             </div>
             <!--end::Input group-->
@@ -693,6 +748,32 @@ endblock %} {% block content %}
         $("#imagemodal").modal("show");
       }
     });
+
+    document
+      .getElementById("file")
+      .addEventListener("change", function (event) {
+        var file = event.target.files[0];
+        var previewContainer = document.getElementById("preview");
+
+        if (file) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            var img = new Image();
+            img.src = e.target.result;
+            img.alt = "Image preview";
+            img.style.maxWidth = "100%";
+            img.style.maxHeight = "300px";
+
+            // Clear the previous content and show the new image
+            previewContainer.innerHTML = "";
+            previewContainer.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // Show a default "No preview" message
+          previewContainer.innerHTML = "No preview";
+        }
+      });
   </script>
   {% endblock %}
   <!--end::Page Custom Javascript-->

@@ -3,55 +3,74 @@ block style %}
 <!--begin::Additional Style-->
 <style>
   .imageIndex {
-    background-image: url("{{ url_for('static', filename= 'media/illustrations/terms-2.png')}}");
-    background-size: 85%;
+    background-image: url("{{ url_for('static', filename='media/illustrations/customer.png') }}");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Ensure it is behind other content */
+  }
+
+  .leftImage {
+    background-image: url("{{ url_for('static', filename='media/illustrations/start-soon.png') }}");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom left;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50%;
+    height: 50%;
+    z-index: -1; /* Ensure it is behind other content */
   }
 </style>
 <!--end::Additional Style-->
 {% endblock %} {% block content %}
 <!--begin::Main-->
-<div class="d-flex flex-column flex-root">
+<div class="d-flex flex-column flex-root position-relative">
+  <!-- Ensure relative positioning for the container -->
   <!--begin::Authentication - Signup Welcome Message -->
-  <div
-    class="imageIndex d-flex flex-column flex-column-fluid bgi-position-y-bottom position-x-center bgi-no-repeat bgi-size-contain bgi-attachment-fixed"
-  >
-    <!--begin::Content-->
-    <div class="d-flex flex-column flex-column-fluid text-center p-10 py-lg-20">
+  <div class="imageIndex"></div>
+  <div class="leftImage"></div>
+  <!--begin::Content-->
+  <div class="d-flex flex-column flex-column-fluid text-center p-10 py-lg-20">
+    <!--begin::Logo-->
+    <a href="{{ url_for('index') }}" class="mb-10 pt-lg-20">
+      <img
+        alt="Logo"
+        src="https://indodacin.com/images/logo.png"
+        class="h-55px mb-5"
+      />
+    </a>
+    <!--end::Logo-->
+    <!--begin::Wrapper-->
+    <div class="pt-lg-10">
       <!--begin::Logo-->
-      <a href="{{ url_for('index')}}" class="mb-10 pt-lg-20">
-        <img
-          alt="Logo"
-          src="https://indodacin.com/images/logo.png"
-          class="h-55px mb-5"
-        />
-      </a>
+      <h1 class="fw-bolder fs-2qx text-dark mb-7">Welcome to ALPR</h1>
       <!--end::Logo-->
-      <!--begin::Wrapper-->
-      <div class="pt-lg-10">
-        <!--begin::Logo-->
-        <h1 class="fw-bolder fs-2qx text-dark mb-7">Welcome to ALPR</h1>
-        <!--end::Logo-->
-        <!--begin::Message-->
-        <div class="fw-bold fs-3 text-gray-400 mb-15">
-          Easy Way detect license plate using our API <br />you just need to
-          focus on retrieving data
-        </div>
-        <!--end::Message-->
-        <!--begin::Action-->
-        <div class="text-center">
-          <a
-            href="{{ url_for('dashboard')}}"
-            class="btn btn-lg btn-primary fw-bolder"
-            >Go to dashboard</a
-          >
-        </div>
-        <!--end::Action-->
+      <!--begin::Message-->
+      <div class="fw-bold fs-3 text-gray-400 mb-15">
+        Easy Way detect license plate using our API <br />you just need to focus
+        on retrieving data
       </div>
-      <!--end::Wrapper-->
+      <!--end::Message-->
+      <!--begin::Action-->
+      <div class="text-center">
+        <a
+          href="{{ url_for('dashboard') }}"
+          class="btn btn-lg btn-primary fw-bolder"
+          >Go to dashboard</a
+        >
+      </div>
+      <!--end::Action-->
     </div>
-    <!--end::Content-->
+    <!--end::Wrapper-->
   </div>
-  <!--end::Authentication - Signup Welcome Message-->
+  <!--end::Content-->
 </div>
 <!--end::Main-->
 {% endblock %}
