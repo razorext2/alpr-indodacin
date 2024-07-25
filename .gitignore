@@ -1,0 +1,19 @@
+# Ignore Python bytecode files
+__pycache__/
+
+# Ignore environment variables
+.env
+
+# Ignore logs
+*.log
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore temporary files
+*.tmp
+*.bak
+
+# ignore file lapi.weights
+alpr/lapi.weights
