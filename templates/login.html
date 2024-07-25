@@ -109,7 +109,7 @@
   src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.min.js"
 ></script>
 <script>
-  $().ready(function () {
+  $(document).ready(function () {
     $("#kt_sign_in_form").validate({
       rules: {
         email: {
@@ -121,25 +121,31 @@
         },
       },
     });
-  });
 
-  $("#kt_sign_in_submit").click(function (e) {
-    e.preventDefault();
-    if ($("#kt_sign_in_form").valid()) {
-      $.ajax({
-        url: '{{url_for("login")}}',
-        type: "post",
-        data: $("#kt_sign_in_form").serialize(),
-        success: function (response, status, xhr, $form) {
-          if (response.status == 1) {
-            toastr.success(response.message);
-            location.href = "{{url_for('dashboard')}}";
-          } else {
-            toastr.error(response.message);
-          }
-        },
-      });
-    }
+    $("#kt_sign_in_form").on("submit", function (e) {
+      e.preventDefault(); // Mencegah pengiriman formulir default
+
+      if ($(this).valid()) {
+        $.ajax({
+          url: '{{ url_for("login") }}',
+          type: "post",
+          data: $(this).serialize(),
+          success: function (response) {
+            if (response.status == 1) {
+              toastr.success(response.message);
+              setTimeout(function () {
+                window.location.href = "{{ url_for('dashboard') }}";
+              }, 1000); // Timer dalam milidetik (2000ms = 2 detik)
+            } else {
+              toastr.error(response.message);
+            }
+          },
+          error: function (xhr, status, error) {
+            console.error("Error:", error);
+          },
+        });
+      }
+    });
   });
 </script>
 {% endblock %}

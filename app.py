@@ -59,26 +59,38 @@ def signup():
         return render_template('signup.html')
     else:
         cur = mysql.connection.cursor()
+        
         email = request.form['email']
-        check = cur.execute("select * from users where email = '"+email+"'" )
+        check = cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        
         if check:
+            cur.close()  # Close cursor
             data = {'status': 0, 'message': 'Email already taken'}
-            return data
+            return jsonify(data)  # Return a JSON response
+        
         fname = request.form['first_name']
         lname = request.form['last_name']
         password = request.form['password']
         hash_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
+        try:
+            insert = cur.execute("INSERT INTO users (fname, lname, email, password) VALUES (%s, %s, %s, %s)", 
+                                 (fname, lname, email, hash_password))
+            mysql.connection.commit()
+            if insert:
+                session['fname'] = fname
+                session['lname'] = lname
+                session['email'] = email
+                data = {'status': 1, 'message': 'Congratulations, your account has been successfully created.'}
+            else:
+                data = {'status': 0, 'message': 'Account creation failed'}
+        except Exception as e:
+            mysql.connection.rollback()  # Rollback in case of error
+            data = {'status': 0, 'message': f'An error occurred: {str(e)}'}
+        finally:
+            cur.close()  # Close cursor
         
-        insert = cur.execute("INSERT INTO users (fname, lname, email, password) VALUES (%s,%s,%s,%s)",(fname,lname,email,hash_password,))
-        
-        mysql.connection.commit()
-        if insert:
-            session['fname'] = request.form['first_name']
-            session['lname'] = request.form['last_name']
-            session['email'] = request.form['email']
-            data = {'status': 1, 'message': 'Congratulations, your account has been successfully created.'}
-            return data
+        return jsonify(data)  # Return a JSON response
 
 @app.route("/dashboard")
 def dashboard():
