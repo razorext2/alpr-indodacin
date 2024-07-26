@@ -144,6 +144,7 @@ endblock %} {% block content %}
                           src="/{{item.before_crop}}"
                           alt="..."
                           style="max-width: 150px"
+                          onclick="showImages('{{item.id}}', '{{item.before_crop}}', '{{item.blur}}', '{{item.eroded}}', '{{item.threshold}}', '{{item.gray}}')"
                         />
                       </div>
                     </td>
@@ -398,392 +399,423 @@ endblock %} {% block content %}
   </div>
 
   <div id="imagemodal" class="modal fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
-        <div class="modal-header" id="kt_modal_edit_plate">
-          <!--begin::Modal title-->
+        <div class="modal-header">
           <h4 class="fw-bolder">Preview Image</h4>
-          <!--end::Modal title-->
-          <!--begin::Close-->
-          <div
-            class="btn btn-icon btn-sm btn-active-icon-primary"
+          <button
+            type="button"
+            class="btn-close"
             data-bs-dismiss="modal"
-          >
-            <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-            <span class="svg-icon svg-icon-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <rect
-                  opacity="0.5"
-                  x="6"
-                  y="17.3137"
-                  width="16"
-                  height="2"
-                  rx="1"
-                  transform="rotate(-45 6 17.3137)"
-                  fill="black"
-                ></rect>
-                <rect
-                  x="7.41422"
-                  y="6"
-                  width="16"
-                  height="2"
-                  rx="1"
-                  transform="rotate(45 7.41422 6)"
-                  fill="black"
-                ></rect>
-              </svg>
-            </span>
-            <!--end::Svg Icon-->
-          </div>
-          <!--end::Close-->
+            aria-label="Close"
+          ></button>
         </div>
         <div class="modal-body">
-          <img
-            class="imagepreview"
-            src=""
-            alt="Image preview"
-            style="width: 100%"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div
-    class="modal fade"
-    id="kt_modal_add_plate"
-    tabindex="-1"
-    style="display: none"
-    aria-hidden="true"
-  >
-    <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-650px">
-      <!--begin::Modal content-->
-      <div class="modal-content">
-        <!--begin::Modal header-->
-        <div class="modal-header" id="kt_modal_edit_plate">
-          <!--begin::Modal title-->
-          <h4 class="fw-bolder">Detect Plate Number</h4>
-          <!--end::Modal title-->
-          <!--begin::Close-->
-          <div
-            class="btn btn-icon btn-sm btn-active-icon-primary"
-            data-bs-dismiss="modal"
-          >
-            <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-            <span class="svg-icon svg-icon-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <rect
-                  opacity="0.5"
-                  x="6"
-                  y="17.3137"
-                  width="16"
-                  height="2"
-                  rx="1"
-                  transform="rotate(-45 6 17.3137)"
-                  fill="black"
-                ></rect>
-                <rect
-                  x="7.41422"
-                  y="6"
-                  width="16"
-                  height="2"
-                  rx="1"
-                  transform="rotate(45 7.41422 6)"
-                  fill="black"
-                ></rect>
-              </svg>
-            </span>
-            <!--end::Svg Icon-->
-          </div>
-          <!--end::Close-->
-        </div>
-        <!--end::Modal header-->
-        <!--begin::Modal body-->
-        <div class="modal-body scroll-y">
-          <!--begin::Scroll-->
-          <div
-            class="d-flex flex-column scroll-y me-n7 pe-7"
-            id="kt_modal_add_user_scroll"
-            data-kt-scroll="true"
-            data-kt-scroll-activate="{default: false, lg: true}"
-            data-kt-scroll-max-height="auto"
-            data-kt-scroll-dependencies="#kt_modal_add_user_header"
-            data-kt-scroll-wrappers="#kt_modal_add_user_scroll"
-            data-kt-scroll-offset="300px"
-          >
-            <!--begin::Input group-->
-            <div class="container-fluid">
+          <div class="row">
+            <div class="col-6">
+              <h5>Real Image</h5>
+              <img
+                id="before_image"
+                src=""
+                alt="Real Image"
+                class="img-fluid mb-2"
+              />
+            </div>
+            <div class="col-6">
               <div class="row">
                 <div class="col-6">
-                  <h4>Upload Image</h4>
-                  <form>
-                    <div class="form-group">
-                      <label for="file">Select an image:</label>
-                      <input
-                        type="file"
-                        class="form-control"
-                        id="file"
-                        name="imageFile"
-                        accept="image/*"
-                      />
-                    </div>
-                  </form>
+                  <h5>Blur Image</h5>
+                  <img
+                    id="blur_image"
+                    src=""
+                    alt="Real Image"
+                    class="img-fluid mb-2"
+                  />
+                  <h5>Eroded Image</h5>
+                  <img
+                    id="eroded_image"
+                    src=""
+                    alt="Real Image"
+                    class="img-fluid mb-2"
+                  />
                 </div>
                 <div class="col-6">
-                  <div class="preview-container">
-                    <div id="preview" class="no-preview">No preview</div>
-                  </div>
+                  <h5>Threshold Image</h5>
+                  <img
+                    id="threshold_image"
+                    src=""
+                    alt="Real Image"
+                    class="img-fluid mb-2"
+                  />
+                  <h5>Gray Image</h5>
+                  <img
+                    id="gray_image"
+                    src=""
+                    alt="Real Image"
+                    class="img-fluid mb-2"
+                  />
                 </div>
               </div>
             </div>
-            <!--end::Input group-->
           </div>
-          <!--end::Scroll-->
-          <!--begin::Actions-->
-          <div class="text-center pt-15">
-            <button
-              type="reset"
-              class="btn btn-light me-3"
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="kt_modal_add_plate"
+      tabindex="-1"
+      style="display: none"
+      aria-hidden="true"
+    >
+      <!--begin::Modal dialog-->
+      <div class="modal-dialog modal-dialog-centered mw-650px">
+        <!--begin::Modal content-->
+        <div class="modal-content">
+          <!--begin::Modal header-->
+          <div class="modal-header" id="kt_modal_edit_plate">
+            <!--begin::Modal title-->
+            <h4 class="fw-bolder">Detect Plate Number</h4>
+            <!--end::Modal title-->
+            <!--begin::Close-->
+            <div
+              class="btn btn-icon btn-sm btn-active-icon-primary"
               data-bs-dismiss="modal"
             >
-              Discard
-            </button>
-            <button onclick="detect()" class="btn btn-primary" id="detect">
-              Detect
-            </button>
+              <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
+              <span class="svg-icon svg-icon-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <rect
+                    opacity="0.5"
+                    x="6"
+                    y="17.3137"
+                    width="16"
+                    height="2"
+                    rx="1"
+                    transform="rotate(-45 6 17.3137)"
+                    fill="black"
+                  ></rect>
+                  <rect
+                    x="7.41422"
+                    y="6"
+                    width="16"
+                    height="2"
+                    rx="1"
+                    transform="rotate(45 7.41422 6)"
+                    fill="black"
+                  ></rect>
+                </svg>
+              </span>
+              <!--end::Svg Icon-->
+            </div>
+            <!--end::Close-->
           </div>
-          <!--end::Actions-->
+          <!--end::Modal header-->
+          <!--begin::Modal body-->
+          <div class="modal-body scroll-y">
+            <!--begin::Scroll-->
+            <div
+              class="d-flex flex-column scroll-y me-n7 pe-7"
+              id="kt_modal_add_user_scroll"
+              data-kt-scroll="true"
+              data-kt-scroll-activate="{default: false, lg: true}"
+              data-kt-scroll-max-height="auto"
+              data-kt-scroll-dependencies="#kt_modal_add_user_header"
+              data-kt-scroll-wrappers="#kt_modal_add_user_scroll"
+              data-kt-scroll-offset="300px"
+            >
+              <!--begin::Input group-->
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-6">
+                    <h4>Upload Image</h4>
+                    <form>
+                      <div class="form-group">
+                        <label for="file">Select an image:</label>
+                        <input
+                          type="file"
+                          class="form-control"
+                          id="file"
+                          name="imageFile"
+                          accept="image/*"
+                        />
+                      </div>
+                    </form>
+                  </div>
+                  <div class="col-6">
+                    <div class="preview-container">
+                      <div id="preview" class="no-preview">No preview</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--end::Input group-->
+            </div>
+            <!--end::Scroll-->
+            <!--begin::Actions-->
+            <div class="text-center pt-15">
+              <button
+                type="reset"
+                class="btn btn-light me-3"
+                data-bs-dismiss="modal"
+              >
+                Discard
+              </button>
+              <button onclick="detect()" class="btn btn-primary" id="detect">
+                Detect
+              </button>
+            </div>
+            <!--end::Actions-->
+          </div>
+          <!--end::Modal body-->
         </div>
-        <!--end::Modal body-->
+        <!--end::Modal content-->
       </div>
-      <!--end::Modal content-->
+      <!--end::Modal dialog-->
     </div>
-    <!--end::Modal dialog-->
-  </div>
-  {% endblock %}
+    {% endblock %}
 
-  <!--begin::Page Custom Javascript(used by this page)-->
-  {% block script %}
-  <script>
-    function edit(id, lp, image) {
-      $("#kt_modal_edit_plate").modal("toggle");
-      $("#plate_image").attr("src", "/" + image);
-      $("#plate_id").val(id);
-      $("#plate_number").val(lp);
-    }
-    function hapus(id) {
-      Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-      }).then(function (result) {
-        if (result.isConfirmed) {
-          // Check if the user clicked "Yes"
-          $.ajax({
-            url: '{{ url_for("user.crud_plate") }}',
-            type: "DELETE",
-            data: { id: id },
-            success: function (response) {
-              if (response.status == 1) {
-                Swal.fire("Deleted!", "User has been deleted.", "success");
-                location.reload();
-              } else {
-                Swal.fire("Error!", "Failed to delete user.", "error");
-              }
-            },
-            error: function () {
-              Swal.fire(
-                "Error!",
-                "An error occurred while deleting the user.",
-                "error"
-              );
-            },
-          });
-        }
-      });
-    }
+    <!--begin::Page Custom Javascript(used by this page)-->
+    {% block script %}
+    <script>
+      function showImages(
+        id,
+        beforeImage,
+        blurImage,
+        erodedImage,
+        thresholdImage,
+        grayImage
+      ) {
+        // Update the src attributes of the images in the modal
+        document.getElementById("before_image").src = "/" + beforeImage;
+        document.getElementById("blur_image").src = "/" + blurImage;
+        document.getElementById("eroded_image").src = "/" + erodedImage;
+        document.getElementById("threshold_image").src = "/" + thresholdImage;
+        document.getElementById("gray_image").src = "/" + grayImage;
 
-    function detect() {
-      var fd = new FormData();
-      var files = $("#file")[0].files;
+        // Show the modal
+        var myModal = new bootstrap.Modal(
+          document.getElementById("imagemodal")
+        );
+        myModal.show();
+      }
 
-      // Check file selected or not
-      if (files.length > 0) {
-        fd.append("imageFile", files[0]);
-        console.log(fd);
+      function edit(id, lp, image) {
+        $("#kt_modal_edit_plate").modal("toggle");
+        $("#plate_image").attr("src", "/" + image);
+        $("#plate_id").val(id);
+        $("#plate_number").val(lp);
+      }
+      function hapus(id) {
         Swal.fire({
           title: "Are you sure?",
-          text: "Detect Plate Number",
+          text: "You won't be able to revert this!",
           icon: "warning",
           showCancelButton: true,
-          showLoaderOnConfirm: true,
-          confirmButtonText: "Yes,",
+          confirmButtonText: "Yes, delete it!",
         }).then(function (result) {
-          Swal.showLoading();
-          $.ajax({
-            url: '{{url_for("alpr.app", token = data.token)}}',
-            type: "post",
-            data: fd,
-            contentType: false,
-            processData: false,
-            success: function (response) {
-              if (response.status == 1) {
-                Swal.fire("Sucess!", response.license, "success").then(
-                  function () {
-                    location.reload();
-                  }
+          if (result.isConfirmed) {
+            // Check if the user clicked "Yes"
+            $.ajax({
+              url: '{{ url_for("user.crud_plate") }}',
+              type: "DELETE",
+              data: { id: id },
+              success: function (response) {
+                if (response.status == 1) {
+                  Swal.fire("Deleted!", "User has been deleted.", "success");
+                  location.reload();
+                } else {
+                  Swal.fire("Error!", "Failed to delete user.", "error");
+                }
+              },
+              error: function () {
+                Swal.fire(
+                  "Error!",
+                  "An error occurred while deleting the user.",
+                  "error"
                 );
-              } else {
-                Swal.fire("Error!", response.message, "error");
-              }
-            },
-          });
-        });
-      } else {
-        Swal.fire({
-          title: "Error!",
-          text: "Silahkan pilih file terlebih dahulu.",
-          icon: "error",
-          confirmButtonText: "Ok",
-        });
-      }
-    }
-    $("#edit_number").click(function (e) {
-      e.preventDefault();
-      $.ajax({
-        url: '{{url_for("user.crud_plate")}}',
-        type: "put",
-        data: $("#plate_details").serialize(),
-        success: function (response, status, xhr, $form) {
-          if (response.status == 1) {
-            toastr.success(response.message);
-            setTimeout(function () {
-              location.reload();
-            }, 2000);
-          } else {
-            toastr.error(response.message);
-          }
-        },
-      });
-    });
-    $("#kt_datatable_example_1").DataTable({
-      filter: true,
-      deferRender: true,
-      searching: true,
-    });
-
-    jQuery(document).ready(function ($) {
-      // Add more attributes to the img.pop
-      $(".pop").attr("data-toggle", "tooltip");
-      $(".pop").attr("data-placement", "top");
-      $(".pop").attr("title", "Click to see a bigger photo.");
-
-      // Current viewport size
-      var wW = $(window).width() * 0.9;
-      var wH = $(window).height() * 0.9; // Max display
-
-      $('[data-toggle="tooltip"]').tooltip();
-
-      $(".pop").on("click", function () {
-        var img = $(this).find("img")[0];
-        console.log("Image element:", img);
-
-        if (img) {
-          // Ensure the image is fully loaded before accessing its properties
-          if (img.complete) {
-            showImageModal(img);
-          } else {
-            $(img).on("load", function () {
-              showImageModal(img);
+              },
             });
           }
-        } else {
-          console.error("Image element not found within .pop");
-        }
-      });
-
-      function showImageModal(img) {
-        console.log("Showing modal for image:", img.src);
-
-        // Real size of the photo
-        var rW = img.naturalWidth;
-        var rH = img.naturalHeight;
-
-        console.log("Image natural dimensions:", rW, rH);
-
-        var cW, cH; // Photo's will be set to this size!
-        cW = rW;
-        cH = rH; // Initial setting
-
-        if (rH < wH) {
-          if (rW > wW) {
-            cW = wW;
-            cH = (wW * rH) / rW;
-          }
-        } else {
-          if (rW < wW) {
-            cH = wH;
-            cW = (wH * rW) / rH;
-          } else if ((wW * rH) / rW < wH) {
-            cW = wW;
-            cH = (wW * rH) / rW;
-          } else {
-            cH = wH;
-            cW = (wH * rW) / rH;
-          }
-        }
-
-        console.log("Calculated dimensions:", cW, cH);
-
-        // Show max photo's size if it's smaller than the current viewport. Otherwise, it scales the photo to the size of the viewport.
-        $(".modal-dialog").css({ width: cW + "px", height: cH + "px" });
-
-        $(".imagepreview").attr("src", $(img).attr("src"));
-        $("#imagemodal").modal("show");
+        });
       }
-    });
 
-    document
-      .getElementById("file")
-      .addEventListener("change", function (event) {
-        var file = event.target.files[0];
-        var previewContainer = document.getElementById("preview");
+      function detect() {
+        var fd = new FormData();
+        var files = $("#file")[0].files;
 
-        if (file) {
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            var img = new Image();
-            img.src = e.target.result;
-            img.alt = "Image preview";
-            img.style.maxWidth = "100%";
-            img.style.maxHeight = "300px";
-
-            // Clear the previous content and show the new image
-            previewContainer.innerHTML = "";
-            previewContainer.appendChild(img);
-          };
-          reader.readAsDataURL(file);
+        // Check file selected or not
+        if (files.length > 0) {
+          fd.append("imageFile", files[0]);
+          console.log(fd);
+          Swal.fire({
+            title: "Are you sure?",
+            text: "Detect Plate Number",
+            icon: "warning",
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            confirmButtonText: "Yes,",
+          }).then(function (result) {
+            Swal.showLoading();
+            $.ajax({
+              url: '{{url_for("alpr.app", token = data.token)}}',
+              type: "post",
+              data: fd,
+              contentType: false,
+              processData: false,
+              success: function (response) {
+                if (response.status == 1) {
+                  Swal.fire("Sucess!", response.license, "success").then(
+                    function () {
+                      location.reload();
+                    }
+                  );
+                } else {
+                  Swal.fire("Error!", response.message, "error");
+                }
+              },
+            });
+          });
         } else {
-          // Show a default "No preview" message
-          previewContainer.innerHTML = "No preview";
+          Swal.fire({
+            title: "Error!",
+            text: "Silahkan pilih file terlebih dahulu.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
+        }
+      }
+
+      $("#edit_number").click(function (e) {
+        e.preventDefault();
+        $.ajax({
+          url: '{{url_for("user.crud_plate")}}',
+          type: "put",
+          data: $("#plate_details").serialize(),
+          success: function (response, status, xhr, $form) {
+            if (response.status == 1) {
+              toastr.success(response.message);
+              setTimeout(function () {
+                location.reload();
+              }, 2000);
+            } else {
+              toastr.error(response.message);
+            }
+          },
+        });
+      });
+
+      $("#kt_datatable_example_1").DataTable({
+        filter: true,
+        deferRender: true,
+        searching: true,
+      });
+
+      jQuery(document).ready(function ($) {
+        // Add more attributes to the img.pop
+        $(".pop").attr("data-toggle", "tooltip");
+        $(".pop").attr("data-placement", "top");
+        $(".pop").attr("title", "Click to see a bigger photo.");
+
+        // Current viewport size
+        var wW = $(window).width() * 0.9;
+        var wH = $(window).height() * 0.9; // Max display
+
+        $('[data-toggle="tooltip"]').tooltip();
+
+        $(".pop").on("click", function () {
+          var img = $(this).find("img")[0];
+          console.log("Image element:", img);
+
+          if (img) {
+            // Ensure the image is fully loaded before accessing its properties
+            if (img.complete) {
+              showImageModal(img);
+            } else {
+              $(img).on("load", function () {
+                showImageModal(img);
+              });
+            }
+          } else {
+            console.error("Image element not found within .pop");
+          }
+        });
+
+        function showImageModal(img) {
+          console.log("Showing modal for image:", img.src);
+
+          // Real size of the photo
+          var rW = img.naturalWidth;
+          var rH = img.naturalHeight;
+
+          console.log("Image natural dimensions:", rW, rH);
+
+          var cW, cH; // Photo's will be set to this size!
+          cW = rW;
+          cH = rH; // Initial setting
+
+          if (rH < wH) {
+            if (rW > wW) {
+              cW = wW;
+              cH = (wW * rH) / rW;
+            }
+          } else {
+            if (rW < wW) {
+              cH = wH;
+              cW = (wH * rW) / rH;
+            } else if ((wW * rH) / rW < wH) {
+              cW = wW;
+              cH = (wW * rH) / rW;
+            } else {
+              cH = wH;
+              cW = (wH * rW) / rH;
+            }
+          }
+
+          console.log("Calculated dimensions:", cW, cH);
+
+          // Show max photo's size if it's smaller than the current viewport. Otherwise, it scales the photo to the size of the viewport.
+          $(".modal-dialog").css({ width: cW + "px", height: cH + "px" });
+
+          $(".imagepreview").attr("src", $(img).attr("src"));
+          $("#imagemodal").modal("show");
         }
       });
-  </script>
-  {% endblock %}
-  <!--end::Page Custom Javascript-->
+
+      document
+        .getElementById("file")
+        .addEventListener("change", function (event) {
+          var file = event.target.files[0];
+          var previewContainer = document.getElementById("preview");
+
+          if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+              var img = new Image();
+              img.src = e.target.result;
+              img.alt = "Image preview";
+              img.style.maxWidth = "100%";
+              img.style.maxHeight = "300px";
+
+              // Clear the previous content and show the new image
+              previewContainer.innerHTML = "";
+              previewContainer.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+          } else {
+            // Show a default "No preview" message
+            previewContainer.innerHTML = "No preview";
+          }
+        });
+    </script>
+    {% endblock %}
+    <!--end::Page Custom Javascript-->
+  </div>
 </div>

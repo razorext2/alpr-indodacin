@@ -55,7 +55,7 @@ def preprocess_image(img):
     """
     Preprocess the image for better detection.
     """
-    scale_factor = 1.5
+    scale_factor = 1.1
     width = int(img.shape[1] * scale_factor)
     height = int(img.shape[0] * scale_factor)
     dim = (width, height)
@@ -91,13 +91,35 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     cv.imwrite(cropped_filename, plate)
 
     gray = cv.cvtColor(plate, cv.COLOR_BGR2GRAY)
-    blur = cv.GaussianBlur(gray, (5, 5), 0)
-    thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
+    blur = cv.GaussianBlur(gray, (3, 3), 0)
+    _, thresh = cv.threshold(blur, 100, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
+    # Apply morphological operations to thin the text
+    kernel = np.ones((1, 3), np.uint8)  # Adjust kernel size to control thickness
+    eroded = cv.erode(thresh, kernel, iterations=1)  # Erode to thin the text
+
+    # Create a black image with the same dimensions as the plate
+    black_plate = np.zeros_like(plate)
+
+    # Invert the eroded threshold image to create a mask where text is white and background is black
+    mask = cv.bitwise_not(eroded)
+
+    # Copy the detected text areas (white) from the eroded image to the black image
+    black_plate[mask == 255] = plate[mask == 255]
+
+    # Save images
     cv.imwrite(f'{dirname}/{filename}-gray.jpg', gray)
+    cv.imwrite(f'{dirname}/{filename}-blur.jpg', blur)
     cv.imwrite(f'{dirname}/{filename}-thresh.jpg', thresh)
+    cv.imwrite(f'{dirname}/{filename}-eroded.jpg', eroded)
+    cv.imwrite(f'{dirname}/{filename}-black-plate.jpg', black_plate)
+    
+    img_blur = f'{dirname}/{filename}-blur.jpg'
+    img_eroded =f'{dirname}/{filename}-eroded.jpg'
+    img_threshold =f'{dirname}/{filename}-thresh.jpg'
 
-    text = pytesseract.image_to_string(thresh, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    # Use pytesseract to extract the text from the eroded image
+    text = pytesseract.image_to_string(eroded, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     print("Detected license plate Number:", text)
     
     s = ''.join(ch for ch in text if ch.isalnum())
@@ -105,8 +127,8 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     with mysql.connection.cursor(MySQLdb.cursors.DictCursor) as curl:
         curl.execute("SELECT id FROM apps WHERE token=%s", (token,))
         token_id = curl.fetchone()
-        curl.execute("INSERT INTO license_plate (app_id, plate_number, file, before_crop) VALUES (%s,%s,%s,%s)",
-                     (token_id['id'], s, cropped_filename, full_image_path))
+        curl.execute("INSERT INTO license_plate (app_id, plate_number, file, before_crop, blur, eroded, threshold) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                     (token_id['id'], s, cropped_filename, full_image_path, img_blur, img_eroded, img_threshold))
         mysql.connection.commit()
 
     return s
