@@ -82,7 +82,7 @@ def signup():
                 session['fname'] = fname
                 session['lname'] = lname
                 session['email'] = email
-                data = {'status': 1, 'message': 'Congratulations, your account has been successfully created.'}
+                data = {'status': 1, 'message': 'Your account has been successfully created.'}
             else:
                 data = {'status': 0, 'message': 'Account creation failed'}
         except Exception as e:
