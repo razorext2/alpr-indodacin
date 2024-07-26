@@ -20,8 +20,8 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # Initialize the parameters
-confThreshold = 0.7   # Confidence threshold
-nmsThreshold = 0.4    # Non-maximum suppression threshold
+confThreshold = 0.1   # Confidence threshold
+nmsThreshold = 0.9    # Non-maximum suppression threshold
 
 inpWidth = 416  # Width of network's input image
 inpHeight = 416  # Height of network's input image
@@ -47,32 +47,14 @@ def getOutputsNames(net):
     # Get the names of the output layers, i.e. the layers with unconnected outputs
     return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-# Function to determine the color of the license plate
-def detect_plate_color(plate):
-    # Convert to HSV color space
-    hsv_plate = cv.cvtColor(plate, cv.COLOR_BGR2HSV)
-
-    # Define color ranges in HSV
-    color_ranges = {
-        'black': ([0, 0, 0], [180, 255, 30]),
-        'white': ([0, 0, 200], [180, 20, 255]),
-        'yellow': ([15, 100, 100], [30, 255, 255]),
-        'red1': ([0, 100, 100], [10, 255, 255]),
-        'red2': ([160, 100, 100], [180, 255, 255])
-    }
-
-    # Check for each color range
-    for color, (lower, upper) in color_ranges.items():
-        lower = np.array(lower, dtype="uint8")
-        upper = np.array(upper, dtype="uint8")
-        mask = cv.inRange(hsv_plate, lower, upper)
-        if cv.countNonZero(mask) > 0:
-            return color
-
-    return "unknown"
-
 # Draw the predicted bounding box and recognize the plate color
-def drawPred(frame, classId, conf, left, top, right, bottom, token):
+def drawPred(frame, classId, conf, left, top, right, bottom, token, margin=10):
+    # Tambahkan margin ke bounding box
+    left = max(0, left - margin)
+    top = max(0, top - margin)
+    right = min(frame.shape[1], right + margin)
+    bottom = min(frame.shape[0], bottom + margin)
+
     # Create directory structure if it does not exist
     dirname = 'static/storage/' + token
     full_dirname = dirname + '/full'
@@ -91,16 +73,25 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     cv.imwrite(cropped_filename, plate)
 
     # Recognize the color of the plate
-    plate_color = detect_plate_color(plate)
+    if plate.size == 0:
+        plate_color = 'Invalid Plate'
+    else:
+        average_color_per_row = np.average(plate, axis=0)
+        average_color = np.average(average_color_per_row, axis=0)
+        color = np.uint8(average_color).tolist()
+        plate_color = 'rgb({},{},{})'.format(color[0], color[1], color[2])
 
     # Save the plate color to the database
     curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     curl.execute("SELECT id FROM apps WHERE token=%s", (token,))
     token_id = curl.fetchone()
-    insert = curl.execute("INSERT INTO plate_color (app_id, plate_color, file, before_crop) VALUES (%s,%s,%s,%s)", (token_id['id'], plate_color, cropped_filename, full_image_path))
-    mysql.connection.commit()
+    if token_id:
+        curl.execute("INSERT INTO plate_color (app_id, plate_color, file, before_crop) VALUES (%s,%s,%s,%s)", 
+                     (token_id['id'], plate_color, cropped_filename, full_image_path))
+        mysql.connection.commit()
 
     return plate_color
+
 
 # Remove the bounding boxes with low confidence using non-maxima suppression
 def postprocess(frame, outs, token):
@@ -110,10 +101,8 @@ def postprocess(frame, outs, token):
     classIds = []
     confidences = []
     boxes = []
-    # Scan through all the bounding boxes output from the network and keep only the
-    # ones with high confidence scores. Assign the box's class label as the class with the highest score.
+
     for out in outs:
-        print("out.shape : ", out.shape)
         for detection in out:
             scores = detection[5:]
             classId = np.argmax(scores)
@@ -129,19 +118,19 @@ def postprocess(frame, outs, token):
                 confidences.append(float(confidence))
                 boxes.append([left, top, width, height])
 
-    # Perform non-maximum suppression to eliminate redundant overlapping boxes with
-    # lower confidences.
     indices = cv.dnn.NMSBoxes(boxes, confidences, confThreshold, nmsThreshold)
-    print(len(confidences))
+
+    if len(indices) > 0:
+        indices = indices.flatten()
+    else:
+        indices = []
+
     plate_color = ''
     for i in indices:
-        i = i[0]
         box = boxes[i]
-        left = box[0]
-        top = box[1]
-        width = box[2]
-        height = box[3]
-        plate_color = drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height, token)
+        left, top, width, height = box
+        plate_color = drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height, token, margin=10)
+    
     if plate_color:
         return [len(confidences), plate_color]
     else:
@@ -155,10 +144,10 @@ def app(token):
         app = curl.fetchone()
         if not app:
             value = {
-                'status': 0,
-                'message': 'Token is Invalid',
+                'status':0,
+                'message':'Token is Invalid',
             }
-            return value
+            return jsonify(value)
 
         # Get Image Request
         imagefile = request.files['imageFile'].read()
@@ -182,36 +171,36 @@ def app(token):
    
         if test[0] == 0:
             value = {
-                'status': 0,
-                'message': 'Plat Nomor Tidak Terdeteksi',
+                'status':0,
+                'message':'Plat Nomor Tidak Terdeteksi',
             }
-            return value
+            return jsonify(value)
 
         if len(test) >= 2:
             value = {
-                'status': 1,
-                'message': 'Plat Nomor Terdeteksi',
+                'status':1,
+                'message':'Plat Nomor Terdeteksi',
                 'plate_color': test[1]
             }
-            return value
+            return jsonify(value)
 
         elif len(test) == 1:
             value = {
-                'status': 1,
-                'message': 'Plat Nomor Terdeteksi',
+                'status':1,
+                'message':'Plat Nomor Terdeteksi',
                 'plate_color': 'Gagal Membaca Warna Plat Nomor'
             }
-            return value
+            return jsonify(value)
     else:
         curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         curl.execute("SELECT * FROM apps WHERE token=%s", (token,))
         app = curl.fetchone()
         if not app:
             value = {
-                'status': 0,
-                'message': 'Token is Invalid',
+                'status':0,
+                'message':'Token is Invalid',
             }
-            return value
+            return jsonify(value)
 
         curl.execute("SELECT * FROM plate_color WHERE app_id=%s", (app['id'],))
         data = curl.fetchall()
