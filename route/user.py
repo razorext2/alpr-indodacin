@@ -108,6 +108,19 @@ def detail_api(id):
         curl.close()
         return render_template('user/api.html', data=data)
 
+@user.route("/app/plate_color/<id>", methods=["GET", "POST"])
+def plate_color(id):
+    data = {}
+    if request.method == "GET":
+        curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        curl.execute("SELECT * FROM apps where id=%s", (id, ))
+        apps = curl.fetchone()
+        data['title'] = apps['app_name'] + " Api"
+        data['token'] = apps['token']
+        data['app_id'] = id
+        curl.close()
+        return render_template('user/plate_color.html', data=data)
+
 @user.route("/app/setting/<id>", methods=["GET", "DELETE"])
 def setting_app(id):
     data = {}
