@@ -47,30 +47,6 @@ def getOutputsNames(net):
     # Get the names of the output layers, i.e. the layers with unconnected outputs
     return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-# Function to determine the color of the license plate
-def detect_plate_color(plate):
-    # Convert to HSV color space
-    hsv_plate = cv.cvtColor(plate, cv.COLOR_BGR2HSV)
-
-    # Define color ranges in HSV
-    color_ranges = {
-        'black': ([0, 0, 0], [180, 255, 30]),
-        'white': ([0, 0, 200], [180, 20, 255]),
-        'yellow': ([15, 100, 100], [30, 255, 255]),
-        'red1': ([0, 100, 100], [10, 255, 255]),
-        'red2': ([160, 100, 100], [180, 255, 255])
-    }
-
-    # Check for each color range
-    for color, (lower, upper) in color_ranges.items():
-        lower = np.array(lower, dtype="uint8")
-        upper = np.array(upper, dtype="uint8")
-        mask = cv.inRange(hsv_plate, lower, upper)
-        if cv.countNonZero(mask) > 0:
-            return color
-
-    return "unknown"
-
 # Draw the predicted bounding box and recognize the plate color
 def drawPred(frame, classId, conf, left, top, right, bottom, token):
     # Create directory structure if it does not exist
@@ -91,7 +67,12 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     cv.imwrite(cropped_filename, plate)
 
     # Recognize the color of the plate
-    plate_color = detect_plate_color(plate)
+    average_color_per_row = np.average(plate, axis=0)
+    average_color = np.average(average_color_per_row, axis=0)
+    color = np.uint8(average_color).tolist()
+
+    # Convert the color to a string
+    plate_color = 'rgb({},{},{})'.format(color[0], color[1], color[2])
 
     # Save the plate color to the database
     curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -155,8 +136,8 @@ def app(token):
         app = curl.fetchone()
         if not app:
             value = {
-                'status': 0,
-                'message': 'Token is Invalid',
+                'status':0,
+                'message':'Token is Invalid',
             }
             return value
 
@@ -182,23 +163,23 @@ def app(token):
    
         if test[0] == 0:
             value = {
-                'status': 0,
-                'message': 'Plat Nomor Tidak Terdeteksi',
+                'status':0,
+                'message':'Plat Nomor Tidak Terdeteksi',
             }
             return value
 
         if len(test) >= 2:
             value = {
-                'status': 1,
-                'message': 'Plat Nomor Terdeteksi',
+                'status':1,
+                'message':'Plat Nomor Terdeteksi',
                 'plate_color': test[1]
             }
             return value
 
         elif len(test) == 1:
             value = {
-                'status': 1,
-                'message': 'Plat Nomor Terdeteksi',
+                'status':1,
+                'message':'Plat Nomor Terdeteksi',
                 'plate_color': 'Gagal Membaca Warna Plat Nomor'
             }
             return value
@@ -208,8 +189,8 @@ def app(token):
         app = curl.fetchone()
         if not app:
             value = {
-                'status': 0,
-                'message': 'Token is Invalid',
+                'status':0,
+                'message':'Token is Invalid',
             }
             return value
 
