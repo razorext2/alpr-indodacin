@@ -73,7 +73,7 @@ endblock %} {% block content %}
             >
               <!--begin::Card title-->
               <div class="card-title m-0">
-                <h3 class="fw-bolder m-0">License Plate</h3>
+                <h3 class="fw-bolder m-0">Plate Color Detection</h3>
               </div>
               <!--end::Card title-->
               <div class="card-toolbar">
@@ -112,14 +112,110 @@ endblock %} {% block content %}
                       ></rect>
                     </svg>
                   </span>
-                  <!--end::Svg Icon-->Plate Color Detection
+                  <!--end::Svg Icon-->Upload Image
                 </button>
               </div>
             </div>
             <!--begin::Card header-->
             <!--begin::Content-->
             <div class="card-body">
-              <p>Test</p>
+              <table
+                id="kt_datatable_example_1"
+                class="table table-row-bordered gy-5"
+              >
+                <thead>
+                  <tr class="fw-bold fs-6 text-muted">
+                    <th>No</th>
+                    <th>Full Image</th>
+                    <th>Plate Area</th>
+                    <th>License Color</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in data['p_color'] %}
+                  <tr>
+                    <td>{{loop.index}}</td>
+                    <td>
+                      <div class="pop">
+                        <img
+                          class="rounded"
+                          src="/{{item.before_crop}}"
+                          alt="..."
+                          style="max-width: 150px"
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <img
+                        src="/{{item.file}}"
+                        alt="..."
+                        style="max-width: 150px"
+                      />
+                    </td>
+                    <td>
+                      <span
+                        class="btn btn-sm text-light"
+                        style="background-color:{{item.plate_color}}"
+                      >
+                        {{item.plate_color}}
+                      </span>
+                    </td>
+                    <td>{{item.created_at}}</td>
+                    <td>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-icon btn-danger btn-active-light-danger"
+                        onclick="hapus('{{item.id}}')"
+                      >
+                        <!--begin::Svg Icon | path: icons/duotune/coding/cod007.svg-->
+                        <span class="svg-icon svg-icon-primary svg-icon-2x"
+                          ><!--begin::Svg Icon | path:/var/www/preview.keenthemes.com/metronic/releases/2021-05-14-112058/theme/html/demo2/dist/../src/media/svg/icons/Home/Trash.svg--><svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                            width="24px"
+                            height="24px"
+                            viewBox="0 0 24 24"
+                            version="1.1"
+                          >
+                            <g
+                              stroke="none"
+                              stroke-width="1"
+                              fill="none"
+                              fill-rule="evenodd"
+                            >
+                              <rect x="0" y="0" width="24" height="24" />
+                              <path
+                                d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z"
+                                fill="#000000"
+                                fill-rule="nonzero"
+                              />
+                              <path
+                                d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z"
+                                fill="#000000"
+                                opacity="0.3"
+                              />
+                            </g></svg
+                          ><!--end::Svg Icon--></span
+                        >
+                        <!--end::Svg Icon-->
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th>No</th>
+                    <th>Full Image</th>
+                    <th>Plate Area</th>
+                    <th>License Color</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
             <!--end::Content-->
           </div>
@@ -127,144 +223,6 @@ endblock %} {% block content %}
       </div>
       <!--end::Wrapper-->
     </div>
-  </div>
-  <div
-    class="modal fade"
-    id="kt_modal_edit_plate"
-    tabindex="-1"
-    style="display: none"
-    aria-hidden="true"
-  >
-    <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-650px">
-      <!--begin::Modal content-->
-      <div class="modal-content">
-        <!--begin::Modal header-->
-        <div class="modal-header" id="kt_modal_edit_plate">
-          <!--begin::Modal title-->
-          <h2 class="fw-bolder">Edit Plate Number</h2>
-          <!--end::Modal title-->
-          <!--begin::Close-->
-          <div
-            class="btn btn-icon btn-sm btn-active-icon-primary"
-            data-bs-dismiss="modal"
-          >
-            <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-            <span class="svg-icon svg-icon-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <rect
-                  opacity="0.5"
-                  x="6"
-                  y="17.3137"
-                  width="16"
-                  height="2"
-                  rx="1"
-                  transform="rotate(-45 6 17.3137)"
-                  fill="black"
-                ></rect>
-                <rect
-                  x="7.41422"
-                  y="6"
-                  width="16"
-                  height="2"
-                  rx="1"
-                  transform="rotate(45 7.41422 6)"
-                  fill="black"
-                ></rect>
-              </svg>
-            </span>
-            <!--end::Svg Icon-->
-          </div>
-          <!--end::Close-->
-        </div>
-        <!--end::Modal header-->
-        <!--begin::Modal body-->
-        <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
-          <!--begin::Form-->
-          <form
-            id="plate_details"
-            class="form fv-plugins-bootstrap5 fv-plugins-framework"
-            action="#"
-          >
-            <!--begin::Scroll-->
-            <div
-              class="d-flex flex-column scroll-y me-n7 pe-7"
-              id="kt_modal_add_user_scroll"
-              data-kt-scroll="true"
-              data-kt-scroll-activate="{default: false, lg: true}"
-              data-kt-scroll-max-height="auto"
-              data-kt-scroll-dependencies="#kt_modal_add_user_header"
-              data-kt-scroll-wrappers="#kt_modal_add_user_scroll"
-              data-kt-scroll-offset="300px"
-            >
-              <img
-                id="plate_image"
-                class="mx-auto my-1"
-                src=""
-                style="max-width: 200px"
-              />
-              <!--begin::Input group-->
-              <div class="fv-row mb-7 fv-plugins-icon-container">
-                <!--begin::Label-->
-                <label class="required fw-bold fs-6 mb-2">Plate Number</label>
-                <!--end::Label-->
-                <!--begin::Input-->
-                <input
-                  type="hidden"
-                  name="plate_id"
-                  class="form-control form-control-solid mb-3 mb-lg-0"
-                  id="plate_id"
-                />
-                <input
-                  type="text"
-                  name="plate_number"
-                  class="form-control form-control-solid mb-3 mb-lg-0"
-                  id="plate_number"
-                  required
-                />
-                <!--end::Input-->
-                <div
-                  class="fv-plugins-message-container invalid-feedback"
-                ></div>
-              </div>
-              <!--end::Input group-->
-            </div>
-            <!--end::Scroll-->
-            <!--begin::Actions-->
-            <div class="text-center pt-15">
-              <button
-                type="reset"
-                class="btn btn-light me-3"
-                data-bs-dismiss="modal"
-              >
-                Discard
-              </button>
-              <button id="edit_number" class="btn btn-primary">
-                <span class="indicator-label">Submit</span>
-                <span class="indicator-progress"
-                  >Please wait...
-                  <span
-                    class="spinner-border spinner-border-sm align-middle ms-2"
-                  ></span
-                ></span>
-              </button>
-            </div>
-            <!--end::Actions-->
-            <div></div>
-          </form>
-          <!--end::Form-->
-        </div>
-        <!--end::Modal body-->
-      </div>
-      <!--end::Modal content-->
-    </div>
-    <!--end::Modal dialog-->
   </div>
 
   <div id="imagemodal" class="modal fade" tabindex="-1" role="dialog">
@@ -339,7 +297,7 @@ endblock %} {% block content %}
         <!--begin::Modal header-->
         <div class="modal-header" id="kt_modal_edit_plate">
           <!--begin::Modal title-->
-          <h4 class="fw-bolder">Detect Plate Number</h4>
+          <h4 class="fw-bolder">Detect Plate Color</h4>
           <!--end::Modal title-->
           <!--begin::Close-->
           <div
@@ -448,12 +406,6 @@ endblock %} {% block content %}
   <!--begin::Page Custom Javascript(used by this page)-->
   {% block script %}
   <script>
-    function edit(id, lp, image) {
-      $("#kt_modal_edit_plate").modal("toggle");
-      $("#plate_image").attr("src", "/" + image);
-      $("#plate_id").val(id);
-      $("#plate_number").val(lp);
-    }
     function hapus(id) {
       Swal.fire({
         title: "Are you sure?",
@@ -465,21 +417,21 @@ endblock %} {% block content %}
         if (result.isConfirmed) {
           // Check if the user clicked "Yes"
           $.ajax({
-            url: '{{ url_for("user.crud_plate") }}',
+            url: '{{ url_for("user.crud_plate_color") }}',
             type: "DELETE",
             data: { id: id },
             success: function (response) {
               if (response.status == 1) {
-                Swal.fire("Deleted!", "User has been deleted.", "success");
+                Swal.fire("Deleted!", "Data has been deleted.", "success");
                 location.reload();
               } else {
-                Swal.fire("Error!", "Failed to delete user.", "error");
+                Swal.fire("Error!", "Failed to delete data.", "error");
               }
             },
             error: function () {
               Swal.fire(
                 "Error!",
-                "An error occurred while deleting the user.",
+                "An error occurred while deleting the data.",
                 "error"
               );
             },
@@ -498,7 +450,7 @@ endblock %} {% block content %}
         console.log(fd);
         Swal.fire({
           title: "Are you sure?",
-          text: "Detect Plate Number",
+          text: "Detect Plate Color?",
           icon: "warning",
           showCancelButton: true,
           showLoaderOnConfirm: true,
@@ -506,7 +458,7 @@ endblock %} {% block content %}
         }).then(function (result) {
           Swal.showLoading();
           $.ajax({
-            url: '{{url_for("alpr.app", token = data.token)}}',
+            url: '{{url_for("plate_color.app", token = data.token)}}',
             type: "post",
             data: fd,
             contentType: false,
@@ -533,24 +485,7 @@ endblock %} {% block content %}
         });
       }
     }
-    $("#edit_number").click(function (e) {
-      e.preventDefault();
-      $.ajax({
-        url: '{{url_for("user.crud_plate")}}',
-        type: "put",
-        data: $("#plate_details").serialize(),
-        success: function (response, status, xhr, $form) {
-          if (response.status == 1) {
-            toastr.success(response.message);
-            setTimeout(function () {
-              location.reload();
-            }, 2000);
-          } else {
-            toastr.error(response.message);
-          }
-        },
-      });
-    });
+
     $("#kt_datatable_example_1").DataTable({
       filter: true,
       deferRender: true,

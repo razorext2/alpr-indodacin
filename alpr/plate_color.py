@@ -2,15 +2,14 @@ from flask import Blueprint, request, Flask, jsonify
 from flask_mysqldb import MySQLdb, MySQL
 import cv2 as cv
 import numpy as np
-import pytesseract
-from datetime import *
+from datetime import datetime
 import os
 
-alpr = Blueprint('alpr', __name__)
+plate_color = Blueprint('plate_color', __name__)
 
 app = Flask(__name__)
 
-app.secret_key = "alpr"
+app.secret_key = "plate_color"
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -21,14 +20,11 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # Initialize the parameters
-confThreshold = 0.7   #Confidence threshold
-nmsThreshold = 0.4  #Non-maximum suppression threshold
+confThreshold = 0.7   # Confidence threshold
+nmsThreshold = 0.4    # Non-maximum suppression threshold
 
-# Initialize the pyetesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-
-inpWidth = 416 #128 #224 #320 #416 #512 #608 #704 #Width of network's input image
-inpHeight = 416 #128 #224 #320 #416 #512 #608 #704 #Height of network's input image
+inpWidth = 416  # Width of network's input image
+inpHeight = 416  # Height of network's input image
 
 # Load names of classes
 classesFile = "alpr/classes.names"
@@ -51,7 +47,7 @@ def getOutputsNames(net):
     # Get the names of the output layers, i.e. the layers with unconnected outputs
     return [layersNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-# Draw the predicted bounding box and cut the detected plate
+# Draw the predicted bounding box and recognize the plate color
 def drawPred(frame, classId, conf, left, top, right, bottom, token):
     # Create directory structure if it does not exist
     dirname = 'static/storage/' + token
@@ -70,30 +66,22 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     cropped_filename = dirname + '/' + filename + '.jpg'
     cv.imwrite(cropped_filename, plate)
 
-    # Process the cropped plate (convert to gray, blur, threshold)
-    gray = cv.cvtColor(plate, cv.COLOR_BGR2GRAY)
-    blur = cv.GaussianBlur(gray, (3, 3), 0)
-    thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    # Recognize the color of the plate
+    average_color_per_row = np.average(plate, axis=0)
+    average_color = np.average(average_color_per_row, axis=0)
+    color = np.uint8(average_color).tolist()
 
-    # Save the processed images
-    cv.imwrite(dirname + '/' + filename + '-gray.jpg', gray)
-    cv.imwrite(dirname + '/' + filename + '-thresh.jpg', thresh)
+    # Convert the color to a string
+    plate_color = 'rgb({},{},{})'.format(color[0], color[1], color[2])
 
-    # Tesseract OCR implementation
-    text = pytesseract.image_to_string(thresh, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    print("Detected license plate Number:", text)
-    
-    # Get only alphanumeric characters
-    s = ''.join(ch for ch in text if ch.isalnum())
-
-    # Save the plate number to the database
+    # Save the plate color to the database
     curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     curl.execute("SELECT id FROM apps WHERE token=%s", (token,))
     token_id = curl.fetchone()
-    insert = curl.execute("INSERT INTO license_plate (app_id, plate_number, file, before_crop) VALUES (%s,%s,%s,%s)", (token_id['id'], s, cropped_filename, full_image_path))
+    insert = curl.execute("INSERT INTO plate_color (app_id, plate_color, file, before_crop) VALUES (%s,%s,%s,%s)", (token_id['id'], plate_color, cropped_filename, full_image_path))
     mysql.connection.commit()
 
-    return s
+    return plate_color
 
 # Remove the bounding boxes with low confidence using non-maxima suppression
 def postprocess(frame, outs, token):
@@ -105,20 +93,12 @@ def postprocess(frame, outs, token):
     boxes = []
     # Scan through all the bounding boxes output from the network and keep only the
     # ones with high confidence scores. Assign the box's class label as the class with the highest score.
-    classIds = []
-    confidences = []
-    boxes = []
     for out in outs:
         print("out.shape : ", out.shape)
         for detection in out:
-            #if detection[4]>0.001:
             scores = detection[5:]
             classId = np.argmax(scores)
-            #if scores[classId]>confThreshold:
             confidence = scores[classId]
-            if detection[4]>confThreshold:
-                print(detection[4], " - ", scores[classId], " - th : ", confThreshold)
-                print(detection)
             if confidence > confThreshold:
                 center_x = int(detection[0] * frameWidth)
                 center_y = int(detection[1] * frameHeight)
@@ -130,11 +110,11 @@ def postprocess(frame, outs, token):
                 confidences.append(float(confidence))
                 boxes.append([left, top, width, height])
 
-    # Perform non maximum suppression to eliminate redundant overlapping boxes with
+    # Perform non-maximum suppression to eliminate redundant overlapping boxes with
     # lower confidences.
     indices = cv.dnn.NMSBoxes(boxes, confidences, confThreshold, nmsThreshold)
     print(len(confidences))
-    license = ''
+    plate_color = ''
     for i in indices:
         i = i[0]
         box = boxes[i]
@@ -142,14 +122,13 @@ def postprocess(frame, outs, token):
         top = box[1]
         width = box[2]
         height = box[3]
-        license = drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height, token)
-    if license:
-        return [len(confidences), license]
+        plate_color = drawPred(frame, classIds[i], confidences[i], left, top, left + width, top + height, token)
+    if plate_color:
+        return [len(confidences), plate_color]
     else:
         return [len(confidences)]
 
-
-@alpr.route("/app/<token>", methods=["GET", "POST"])
+@plate_color.route("/app/<token>", methods=["GET", "POST"])
 def app(token):
     if request.method == 'POST':
         curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -162,13 +141,13 @@ def app(token):
             }
             return value
 
-        #Get Image Request
+        # Get Image Request
         imagefile = request.files['imageFile'].read()
 
-        #convert string data to numpy array
+        # Convert string data to numpy array
         npimg = np.fromstring(imagefile, dtype=np.uint8)
 
-        # convert numpy array to image
+        # Convert numpy array to image
         img = cv.imdecode(npimg, cv.IMREAD_UNCHANGED)
 
         blob = cv.dnn.blobFromImage(img, 1/255, (inpWidth, inpHeight), [0,0,0], 1, crop=False)
@@ -182,7 +161,7 @@ def app(token):
         # Remove the bounding boxes with low confidence
         test = postprocess(img, outs, token)
    
-        if test[0] is 0:
+        if test[0] == 0:
             value = {
                 'status':0,
                 'message':'Plat Nomor Tidak Terdeteksi',
@@ -193,7 +172,7 @@ def app(token):
             value = {
                 'status':1,
                 'message':'Plat Nomor Terdeteksi',
-                'license': test[1]
+                'plate_color': test[1]
             }
             return value
 
@@ -201,7 +180,7 @@ def app(token):
             value = {
                 'status':1,
                 'message':'Plat Nomor Terdeteksi',
-                'license': 'Gagal Membaca Plat Nomor'
+                'plate_color': 'Gagal Membaca Warna Plat Nomor'
             }
             return value
     else:
@@ -215,7 +194,6 @@ def app(token):
             }
             return value
 
-        curl.execute("SELECT * FROM license_plate WHERE app_id=%s", (app['id'],))
+        curl.execute("SELECT * FROM plate_color WHERE app_id=%s", (app['id'],))
         data = curl.fetchall()
         return jsonify(data)
-    

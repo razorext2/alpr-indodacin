@@ -115,9 +115,11 @@ def plate_color(id):
         curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         curl.execute("SELECT * FROM apps where id=%s", (id, ))
         apps = curl.fetchone()
-        data['title'] = apps['app_name'] + " Api"
+        data['title'] = apps['app_name'] + " App"
         data['token'] = apps['token']
         data['app_id'] = id
+        curl.execute("SELECT * FROM plate_color where app_id=%s order by created_at desc", (id, ))
+        data['p_color'] = curl.fetchall()
         curl.close()
         return render_template('user/plate_color.html', data=data)
 
@@ -160,3 +162,16 @@ def crud_plate():
             if delete:
                 data = {'status': 1, 'message': 'Plate number has been deleted successfully.'}
                 return data
+            
+# Plate color
+@user.route('/plate_color', methods=["PUT", "POST", "DELETE"])
+def crud_plate_color():
+    if request.method == "DELETE":
+            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            id = request.form['id']
+            delete = cur.execute("DELETE FROM plate_color where id = "+id+"")
+            mysql.connection.commit()
+            if delete:
+                data = {'status': 1, 'message': 'Plate number has been deleted successfully.'}
+                return data
+# Plate Color

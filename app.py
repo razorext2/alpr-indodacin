@@ -4,6 +4,7 @@ from flask_mysqldb import MySQL,MySQLdb
 from flask_bcrypt import Bcrypt
 from werkzeug.wrappers import response
 from alpr.alpr import alpr
+from alpr.plate_color import plate_color
 from route.admin import admin
 from route.user import user
 
@@ -133,6 +134,7 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 app.register_blueprint(alpr, url_prefix='/api')
+app.register_blueprint(plate_color, url_prefix='/plate_color')
 app.register_blueprint(admin, url_prefix='/manage')
 app.register_blueprint(user, url_prefix='/user')
 
