@@ -100,21 +100,11 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     kernel = np.ones((1, 3), np.uint8)  # Adjust kernel size to control thickness
     eroded = cv.erode(thresh, kernel, iterations=1)  # Erode to thin the text
 
-    # Create a black image with the same dimensions as the plate
-    black_plate = np.zeros_like(plate)
-
-    # Invert the eroded threshold image to create a mask where text is white and background is black
-    mask = cv.bitwise_not(eroded)
-
-    # Copy the detected text areas (white) from the eroded image to the black image
-    black_plate[mask == 255] = plate[mask == 255]
-
     # Save images
     cv.imwrite(f'{dirname}/{filename}-gray.jpg', gray)
     cv.imwrite(f'{dirname}/{filename}-blur.jpg', blur)
     cv.imwrite(f'{dirname}/{filename}-thresh.jpg', thresh)
     cv.imwrite(f'{dirname}/{filename}-eroded.jpg', eroded)
-    cv.imwrite(f'{dirname}/{filename}-black-plate.jpg', black_plate)
     
     img_blur = f'{dirname}/{filename}-blur.jpg'
     img_eroded =f'{dirname}/{filename}-eroded.jpg'
