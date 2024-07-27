@@ -21,14 +21,14 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # Initialize the parameters
-confThreshold = 0.1   # Confidence threshold
-nmsThreshold = 0.45   # Non-maximum suppression threshold
+confThreshold = 0.7   # Confidence threshold
+nmsThreshold = 0.4   # Non-maximum suppression threshold
 
 # Initialize the pytesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-inpWidth = 608 # Width of network's input image
-inpHeight = 608 # Height of network's input image
+inpWidth = 416 # Width of network's input image
+inpHeight = 416 # Height of network's input image
 
 # Load names of classes
 classesFile = "alpr/classes.names"
@@ -55,7 +55,7 @@ def preprocess_image(img):
     """
     Preprocess the image for better detection.
     """
-    scale_factor = 1.1
+    scale_factor = 1.6
     width = int(img.shape[1] * scale_factor)
     height = int(img.shape[0] * scale_factor)
     dim = (width, height)
@@ -92,7 +92,9 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
 
     gray = cv.cvtColor(plate, cv.COLOR_BGR2GRAY)
     blur = cv.GaussianBlur(gray, (3, 3), 0)
-    _, thresh = cv.threshold(blur, 100, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    
+    # Changte threshold to 0, 255 from 100, 255
+    _, thresh = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 
     # Apply morphological operations to thin the text
     kernel = np.ones((1, 3), np.uint8)  # Adjust kernel size to control thickness
@@ -119,8 +121,8 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     img_threshold =f'{dirname}/{filename}-thresh.jpg'
     img_gray =f'{dirname}/{filename}-gray.jpg'
 
-    # Use pytesseract to extract the text from the eroded image
-    text = pytesseract.image_to_string(eroded, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    # Use pytesseract to extract the text from the thresh image
+    text = pytesseract.image_to_string(thresh, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     print("Detected license plate Number:", text)
     
     s = ''.join(ch for ch in text if ch.isalnum())

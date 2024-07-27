@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, Blueprint,  render_template, session, url_for, jsonify
 from flask_mysqldb import MySQLdb, MySQL
 from flask_bcrypt import Bcrypt
@@ -149,19 +150,38 @@ def crud_plate():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         plate_number = request.form['plate_number']
         id = request.form['plate_id']
-        update = cur.execute("UPDATE license_plate SET plate_number=%s where id = %s",(plate_number, id))
+        update = cur.execute("UPDATE license_plate SET plate_number=%s WHERE id = %s", (plate_number, id))
         mysql.connection.commit()
         if update:
-            data = {'status': 1, 'message': 'Plate Number has been updated successfully.'}
-            return data
+            data = {'status': 1, 'message': 'Plate number has been updated successfully.'}
+            return jsonify(data)
+
     if request.method == "DELETE":
-            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            id = request.form['id']
-            delete = cur.execute("DELETE FROM license_plate where id = "+id+"")
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        id = request.form['id']
+        
+        # Ambil informasi file dari database
+        cur.execute("SELECT file, before_crop, blur, eroded, threshold, gray FROM license_plate WHERE id = %s", (id,))
+        result = cur.fetchone()
+        
+        if result:
+            # Hapus semua file terkait
+            file_paths = [result['file'], result['before_crop'], result['blur'], result['eroded'], result['threshold'], result['gray']]
+            
+            for file_path in file_paths:
+                if file_path and os.path.exists(file_path):
+                    os.remove(file_path)
+            
+            # Hapus data dari database
+            delete = cur.execute("DELETE FROM license_plate WHERE id = %s", (id,))
             mysql.connection.commit()
+            
             if delete:
-                data = {'status': 1, 'message': 'Plate number has been deleted successfully.'}
-                return data
+                data = {'status': 1, 'message': 'Plate number and associated files have been deleted successfully.'}
+                return jsonify(data)
+        
+        data = {'status': 0, 'message': 'Plate number not found.'}
+        return jsonify(data)
             
 # Plate color
 @user.route('/plate_color', methods=["PUT", "POST", "DELETE"])
