@@ -187,11 +187,29 @@ def crud_plate():
 @user.route('/plate_color', methods=["PUT", "POST", "DELETE"])
 def crud_plate_color():
     if request.method == "DELETE":
-            cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            id = request.form['id']
-            delete = cur.execute("DELETE FROM plate_color where id = "+id+"")
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        id = request.form['id']
+        
+        # Ambil informasi file dari database
+        cur.execute("SELECT file, before_crop FROM plate_color WHERE id = %s", (id,))
+        result = cur.fetchone()
+        
+        if result:
+            file_paths = [result['file'], result['before_crop']]
+            
+            # Hapus semua file terkait
+            for file_path in file_paths:
+                if file_path and os.path.exists(file_path):
+                    os.remove(file_path)
+            
+            # Hapus data dari database
+            delete = cur.execute("DELETE FROM plate_color WHERE id = %s", (id,))
             mysql.connection.commit()
+            
             if delete:
-                data = {'status': 1, 'message': 'Plate number has been deleted successfully.'}
-                return data
+                data = {'status': 1, 'message': 'Plate color and associated files have been deleted successfully.'}
+                return jsonify(data)
+        
+        return jsonify({'status': 0, 'message': 'Plate color not found.'})
+
 # Plate Color
