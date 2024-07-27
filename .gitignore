@@ -17,3 +17,6 @@ __pycache__/
 
 # ignore file lapi.weights
 alpr/lapi.weights
+
+##ignore folder storage
+static/storage
