@@ -117,6 +117,7 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     img_blur = f'{dirname}/{filename}-blur.jpg'
     img_eroded =f'{dirname}/{filename}-eroded.jpg'
     img_threshold =f'{dirname}/{filename}-thresh.jpg'
+    img_gray =f'{dirname}/{filename}-gray.jpg'
 
     # Use pytesseract to extract the text from the eroded image
     text = pytesseract.image_to_string(eroded, config="--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -127,8 +128,8 @@ def drawPred(frame, classId, conf, left, top, right, bottom, token):
     with mysql.connection.cursor(MySQLdb.cursors.DictCursor) as curl:
         curl.execute("SELECT id FROM apps WHERE token=%s", (token,))
         token_id = curl.fetchone()
-        curl.execute("INSERT INTO license_plate (app_id, plate_number, file, before_crop, blur, eroded, threshold) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                     (token_id['id'], s, cropped_filename, full_image_path, img_blur, img_eroded, img_threshold))
+        curl.execute("INSERT INTO license_plate (app_id, plate_number, file, before_crop, blur, eroded, threshold, gray) VALUES (%s,%s,%s,%s,%s,%s,%s, %s)",
+                     (token_id['id'], s, cropped_filename, full_image_path, img_blur, img_eroded, img_threshold, img_gray))
         mysql.connection.commit()
 
     return s
